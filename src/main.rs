@@ -47,17 +47,13 @@ fn first_char_of_file(path: &str) -> Result<char, FirstError> {
     let mut f = std::fs::File::open(path).map_err(FirstError::OpenError)?;
     let mut c = [0u8];
 
-    // f.read(&mut c);
-    // println!("{}", c[0] as char);
-    
-    match f.read(&mut c) {
-        Ok(1) => match c[0] {
+    match f.read(&mut c).map_err(FirstError::ReadError)? {
+        1 => match c[0] {
             v if v <= 0x7f => Ok(v as char),
             _ => Err(FirstError::NonAscii),
         }
-        Ok(0) => Err(FirstError::EmptyFile),
-        Err(e) => Err(FirstError::ReadError(e)),
-        Ok(n) => panic!("internal error: overread: {n}"),
+        0 => Err(FirstError::EmptyFile),
+        n => panic!("internal error: overread: {n}"),
     }
 }
 
